@@ -139,17 +139,12 @@
 
   <script>
     // ==================== CONFIGURA AQUÍ TU WEB APP ====================
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwcjlx77TABZ-IcnODQ1hDD311Yp2H5rPzKJ7Z8y_29rGcrusDw-_rHmmNLsRHqdzyO/exec';   // ← PEGA LA URL DEL DEPLOY
+    const WEB_APP_URL = 'https://script.google.com/macros/s/TU_URL_AQUI/exec';   // ← CAMBIA ESTO DESPUÉS
     // =================================================================
 
     let appointments = [];
     let currentView = 'hoy';
     let debounceTimer = null;
-
-    // Tailwind
-    function initTailwind() {
-      return true; // CDN ya está listo
-    }
 
     async function api(action, data = {}) {
       const res = await fetch(WEB_APP_URL, {
@@ -196,7 +191,7 @@
 
     async function loadData() {
       const res = await api('getAppointments');
-      if (res.success) appointments = res.appointments;
+      if (res.success) appointments = res.appointments || [];
       renderCurrentView();
     }
 
@@ -230,13 +225,12 @@
 
     async function renderPacientes() {
       const res = await api('getPatients');
+      if (!res.success) return;
       const container = document.getElementById('list-pacientes');
       container.innerHTML = '';
 
-      const filtered = res.patients.filter(p => {
-        const search = document.getElementById('search-pacientes').value.toLowerCase();
-        return !search || p.name.toLowerCase().includes(search);
-      });
+      const searchTerm = document.getElementById('search-pacientes').value.toLowerCase();
+      const filtered = res.patients.filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm));
 
       filtered.forEach(p => {
         const div = document.createElement('div');
@@ -246,31 +240,33 @@
             <div class="font-semibold text-[#1D3B8C]">${p.name}</div>
             <div class="text-sm text-[#C5A473]">Última cita: ${formatDate(p.ultimaCita)}</div>
           </div>
-          <div class="text-xs bg-[#C5A473]/10 text-[#1D3B8C] px-3 py-1 rounded-3xl">${p.especialidad}</div>
+          <div class="text-xs bg-[#C5A473]/10 text-[#1D3B8C] px-3 py-1 rounded-3xl">${p.especialidad || 'General'}</div>
         `;
         container.appendChild(div);
       });
 
-      if (filtered.length === 0) container.innerHTML = `<div class="text-center py-12 text-[#C5A473]">No se encontraron pacientes</div>`;
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center py-12 text-[#C5A473]">No se encontraron pacientes</div>`;
+      }
     }
 
     async function searchAndShow(query) {
-      if (!query) {
+      if (!query || query.length < 2) {
         document.getElementById('suggestions').classList.add('hidden');
         return;
       }
       const res = await api('searchPatients', { query });
+      if (!res.success) return;
+
       const container = document.getElementById('suggestions');
+      container.innerHTML = '';
       const ul = document.createElement('ul');
       ul.className = 'py-2';
 
       res.patients.forEach(p => {
         const li = document.createElement('li');
         li.className = 'px-5 py-3 hover:bg-[#FFFDF5] cursor-pointer flex justify-between';
-        li.innerHTML = `
-          <span class="font-medium">${p.name}</span>
-          <span class="text-xs text-[#C5A473]">Última: ${formatDate(p.lastFecha)}</span>
-        `;
+        li.innerHTML = `<span class="font-medium">${p.name}</span><span class="text-xs text-[#C5A473]">Última: ${formatDate(p.lastFecha)}</span>`;
         li.onclick = () => {
           document.getElementById('input-paciente').value = p.name;
           document.getElementById('ultima-cita-text').innerHTML = `✅ Última cita: <strong>${formatDate(p.lastFecha)}</strong>`;
@@ -279,7 +275,6 @@
         ul.appendChild(li);
       });
 
-      container.innerHTML = '';
       container.appendChild(ul);
       container.classList.remove('hidden');
     }
@@ -291,7 +286,6 @@
 
     function showAddModal() {
       document.getElementById('modal-add').classList.remove('hidden');
-      // valores por defecto
       const hoy = new Date().toISOString().split('T')[0];
       document.getElementById('input-fecha').value = hoy;
       document.getElementById('input-paciente').value = '';
@@ -330,9 +324,7 @@
     async function eliminarCita(id) {
       if (!confirm('¿Eliminar esta cita?')) return;
       const res = await api('deleteAppointment', { id });
-      if (res.success) {
-        await loadData();
-      }
+      if (res.success) await loadData();
     }
 
     function switchView(view) {
@@ -342,13 +334,9 @@
       renderCurrentView();
     }
 
-    // INICIO
     window.onload = async () => {
-      initTailwind();
       await loadData();
-      // Buscador de pacientes en tiempo real
-      document.getElementById('search-pacientes').addEventListener('input', () => renderPacientes());
-      // Abre directamente en "Hoy"
+      document.getElementById('search-pacientes').addEventListener('input', renderPacientes);
       document.getElementById('view-hoy').classList.remove('hidden');
     };
   </script>
