@@ -299,27 +299,48 @@
       document.getElementById('modal-add').classList.add('hidden');
     }
 
-    async function guardarCita() {
-      const data = {
+async function guardarCita() {
+    const data = {
         paciente: document.getElementById('input-paciente').value.trim(),
         telefono: document.getElementById('input-telefono').value.trim(),
         fecha: document.getElementById('input-fecha').value,
         hora: document.getElementById('input-hora').value,
         especialidad: document.getElementById('input-especialidad').value
-      };
+    };
 
-      if (!data.paciente || !data.fecha || !data.hora || !data.especialidad) {
-        alert('Por favor completa todos los campos obligatorios');
+    if (!data.paciente || !data.fecha || !data.hora || !data.especialidad) {
+        alert('❌ Por favor completa Nombre, Fecha, Hora y Especialidad');
         return;
-      }
-
-      const res = await api('addAppointment', data);
-      if (res.success) {
-        hideModal();
-        await loadData();
-        alert('✅ Cita guardada correctamente');
-      }
     }
+
+    const btn = document.querySelector('button[onclick="guardarCita()"]');
+    const originalText = btn ? btn.innerHTML : 'Guardar cita';
+
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = 'Guardando...';
+        }
+
+        const response = await api('addAppointment', data);
+
+        if (response.success) {
+            alert('✅ ¡Cita guardada con éxito!');
+            hideModal();
+            await loadData();
+        } else {
+            throw new Error(response.error || 'Error del servidor');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('❌ Error al guardar la cita: ' + error.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+}
 
     async function eliminarCita(id) {
       if (!confirm('¿Eliminar esta cita?')) return;
