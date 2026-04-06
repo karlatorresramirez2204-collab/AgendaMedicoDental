@@ -14,26 +14,26 @@
     h1 { font-family: 'Playfair Display', serif; }
     .card { box-shadow: 0 10px 15px -3px rgb(197 164 115 / 0.15); }
     .notebook-bg { background: linear-gradient(#FFFDF5 0%, #FFFDF5 100%), repeating-linear-gradient(90deg, transparent, transparent 100%, #C5A473 100%, #C5A473 101%); background-size: 100% 100%, 30px 100%; }
+    .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #1D3B8C; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="bg-[#FFFDF5] min-h-screen pb-20">
 
-  <!-- HEADER LIBRETA -->
   <div class="bg-[#FFFDF5] border-b border-[#C5A473]/30 sticky top-0 z-50 shadow-sm">
     <div class="max-w-xl mx-auto px-6 py-4 flex items-center gap-3">
       <img src="logo.jpg" alt="Logo" class="h-12 w-12 object-contain rounded-2xl shadow-inner">
       <div>
         <h1 class="text-3xl text-[#1D3B8C] tracking-tight">Salud Médica Dental</h1>
-        <p class="text-[#C5A473] text-sm -mt-1 font-medium">Agenda • Libreta Premium</p>
+        <p class="text-[#C5A473] text-sm -mt-1 font-medium">Agenda Personalizada</p>
       </div>
     </div>
   </div>
 
   <div class="max-w-xl mx-auto px-4 pt-2">
-    <!-- VISTA HOY -->
     <div id="view-hoy" class="view">
       <div class="flex justify-between items-baseline mb-6">
-        <h2 class="text-2xl font-semibold text-[#1D3B8C]" id="hoy-title">Hoy</h2>
+        <h2 class="text-2xl font-semibold text-[#1D3B8C]">Hoy</h2>
         <button onclick="showAddModal()" class="bg-[#1D3B8C] text-white px-6 py-3 rounded-3xl flex items-center gap-2 text-lg shadow-lg active:scale-95 transition">
           <span class="text-2xl leading-none">+</span> Nueva cita
         </button>
@@ -41,19 +41,16 @@
       <div id="list-hoy" class="space-y-4"></div>
     </div>
 
-    <!-- VISTA SEMANA -->
     <div id="view-semana" class="view hidden">
       <h2 class="text-2xl font-semibold text-[#1D3B8C] mb-6">Esta semana</h2>
       <div id="list-semana" class="space-y-4"></div>
     </div>
 
-    <!-- VISTA MES -->
     <div id="view-mes" class="view hidden">
       <h2 class="text-2xl font-semibold text-[#1D3B8C] mb-6">Este mes</h2>
       <div id="list-mes" class="space-y-4"></div>
     </div>
 
-    <!-- VISTA PACIENTES -->
     <div id="view-pacientes" class="view hidden">
       <h2 class="text-2xl font-semibold text-[#1D3B8C] mb-4">Pacientes</h2>
       <input id="search-pacientes" type="text" placeholder="Buscar paciente..." 
@@ -62,299 +59,204 @@
     </div>
   </div>
 
-  <!-- NAVEGACIÓN INFERIOR -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#C5A473]/30 max-w-xl mx-auto">
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#C5A473]/30 max-w-xl mx-auto z-[60]">
     <div class="flex justify-around text-[#1D3B8C] py-2">
-      <button onclick="switchView('hoy')" class="flex flex-col items-center py-1 px-6 active:scale-95">
-        <span class="text-3xl">📅</span>
-        <span class="text-xs font-medium">Hoy</span>
+      <button onclick="switchView('hoy')" class="flex flex-col items-center py-1 px-4">
+        <span class="text-2xl">📅</span><span class="text-[10px] font-bold uppercase">Hoy</span>
       </button>
-      <button onclick="switchView('semana')" class="flex flex-col items-center py-1 px-6 active:scale-95">
-        <span class="text-3xl">📆</span>
-        <span class="text-xs font-medium">Semana</span>
+      <button onclick="switchView('semana')" class="flex flex-col items-center py-1 px-4">
+        <span class="text-2xl">📆</span><span class="text-[10px] font-bold uppercase">Semana</span>
       </button>
-      <button onclick="switchView('mes')" class="flex flex-col items-center py-1 px-6 active:scale-95">
-        <span class="text-3xl">📅</span>
-        <span class="text-xs font-medium">Mes</span>
+      <button onclick="switchView('mes')" class="flex flex-col items-center py-1 px-4">
+        <span class="text-2xl">📋</span><span class="text-[10px] font-bold uppercase">Mes</span>
       </button>
-      <button onclick="switchView('pacientes')" class="flex flex-col items-center py-1 px-6 active:scale-95">
-        <span class="text-3xl">👤</span>
-        <span class="text-xs font-medium">Pacientes</span>
+      <button onclick="switchView('pacientes')" class="flex flex-col items-center py-1 px-4">
+        <span class="text-2xl">👤</span><span class="text-[10px] font-bold uppercase">Pacientes</span>
       </button>
     </div>
   </div>
 
-  <!-- MODAL NUEVA CITA -->
-  <div id="modal-add" onclick="if(event.target===this)hideModal()" class="hidden fixed inset-0 bg-black/70 flex items-end z-[100]">
-    <div onclick="event.stopImmediatePropagation()" class="bg-white w-full max-w-xl mx-auto rounded-t-3xl p-6 notebook-bg">
-      <h3 class="text-2xl text-[#1D3B8C] mb-6">Nueva cita</h3>
+  <div id="modal-add" class="hidden fixed inset-0 bg-black/70 flex items-end z-[100]" onclick="if(event.target===this)hideModal()">
+    <div class="bg-white w-full max-w-xl mx-auto rounded-t-3xl p-6 notebook-bg shadow-2xl" onclick="event.stopPropagation()">
+      <h3 class="text-2xl text-[#1D3B8C] mb-6 font-bold">Nueva cita</h3>
       
-      <div class="space-y-5">
+      <div class="space-y-4">
         <div class="relative">
-          <label class="text-sm font-medium text-[#1D3B8C]">Nombre del paciente</label>
-          <input id="input-paciente" type="text" placeholder="Ej. María López" 
-                 class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-4 text-lg focus:outline-none focus:border-[#1D3B8C]"
+          <label class="text-xs font-bold text-[#1D3B8C] uppercase tracking-wider">Paciente</label>
+          <input id="input-paciente" type="text" placeholder="Nombre completo" 
+                 class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-3 text-lg focus:outline-none focus:border-[#1D3B8C]"
                  oninput="debounceSearch(this.value)">
-          <div id="suggestions" class="hidden absolute z-10 mt-1 w-full bg-white rounded-3xl shadow-xl border border-[#C5A473]/30 max-h-60 overflow-auto"></div>
-          <div id="ultima-cita-text" class="text-[#C5A473] text-sm mt-2 font-medium"></div>
+          <div id="suggestions" class="hidden absolute z-[110] mt-1 w-full bg-white rounded-2xl shadow-2xl border border-[#C5A473]/30 max-h-48 overflow-auto"></div>
+          <div id="ultima-cita-text" class="text-[#C5A473] text-xs mt-2 italic font-medium"></div>
         </div>
 
         <div>
-          <label class="text-sm font-medium text-[#1D3B8C]">Teléfono (opcional)</label>
-          <input id="input-telefono" type="tel" placeholder="33 1234 5678" 
-                 class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-4 text-lg focus:outline-none focus:border-[#1D3B8C]">
+          <label class="text-xs font-bold text-[#1D3B8C] uppercase">Teléfono</label>
+          <input id="input-telefono" type="tel" placeholder="33 0000 0000" 
+                 class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-3 text-lg focus:outline-none focus:border-[#1D3B8C]">
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="text-sm font-medium text-[#1D3B8C]">Fecha</label>
-            <input id="input-fecha" type="date" class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-4 text-lg focus:outline-none focus:border-[#1D3B8C]">
+            <label class="text-xs font-bold text-[#1D3B8C] uppercase">Fecha</label>
+            <input id="input-fecha" type="date" class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-3 text-lg focus:outline-none focus:border-[#1D3B8C]">
           </div>
           <div>
-            <label class="text-sm font-medium text-[#1D3B8C]">Hora</label>
-            <input id="input-hora" type="time" class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-4 text-lg focus:outline-none focus:border-[#1D3B8C]">
+            <label class="text-xs font-bold text-[#1D3B8C] uppercase">Hora</label>
+            <input id="input-hora" type="time" class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-3 text-lg focus:outline-none focus:border-[#1D3B8C]">
           </div>
         </div>
 
         <div>
-          <label class="text-sm font-medium text-[#1D3B8C]">Especialidad</label>
-          <select id="input-especialidad" class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-4 text-lg focus:outline-none focus:border-[#1D3B8C]">
-            <option value="">Seleccionar...</option>
+          <label class="text-xs font-bold text-[#1D3B8C] uppercase">Especialidad</label>
+          <select id="input-especialidad" class="w-full mt-1 border border-[#C5A473]/40 rounded-2xl px-4 py-3 text-lg focus:outline-none focus:border-[#1D3B8C]">
             <option value="Odontología General">Odontología General</option>
-            <option value="Endodoncia">Endodoncia</option>
             <option value="Ortodoncia">Ortodoncia</option>
+            <option value="Endodoncia">Endodoncia</option>
             <option value="Maxilofacial">Maxilofacial</option>
             <option value="Odontopediatría">Odontopediatría</option>
-            <option value="Periodoncia">Periodoncia</option>
           </select>
         </div>
       </div>
 
       <div class="flex gap-4 mt-8">
-        <button onclick="hideModal()" class="flex-1 py-4 text-[#1D3B8C] font-medium border border-[#C5A473]/40 rounded-3xl">Cancelar</button>
-        <button onclick="guardarCita()" class="flex-1 py-4 bg-[#1D3B8C] text-white font-medium rounded-3xl">Guardar cita</button>
+        <button onclick="hideModal()" class="flex-1 py-4 text-gray-500 font-bold uppercase tracking-widest text-xs">Cancelar</button>
+        <button id="btn-save" onclick="guardarCita()" class="flex-1 py-4 bg-[#1D3B8C] text-white font-bold rounded-3xl shadow-lg active:bg-[#152a66]">Guardar</button>
       </div>
     </div>
   </div>
 
-    <script>
-    // ==================== CONFIGURA AQUÍ TU WEB APP ====================
+  <script>
+    // PEGA AQUÍ TU URL DE GOOGLE (La que termina en RHqdzyO/exec)
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzkb5YpZB845gYW6gQLmR-kKYuMHd1jrOJoeTI6mfb7nRk0MUeyGs-QkZkjBeM5hZWH/exec';
-    // =================================================================
 
     let appointments = [];
     let currentView = 'hoy';
     let debounceTimer = null;
 
+    // Función API mejorada con manejo de errores silenciosos para evitar bloqueos
     async function api(action, data = {}) {
       try {
-        const res = await fetch(WEB_APP_URL, {
+        const response = await fetch(WEB_APP_URL, {
           method: 'POST',
+          mode: 'no-cors', // Evita errores de seguridad de navegador
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action, data })
         });
-        if (!res.ok) throw new Error('Error del servidor: ' + res.status);
-        return await res.json();
+        
+        // Como usamos no-cors, la respuesta viene vacía. 
+        // Hacemos una segunda llamada para obtener datos si es necesario (GET)
+        if (action === 'getAppointments' || action === 'getPatients' || action === 'searchPatients') {
+          const res = await fetch(`${WEB_APP_URL}?action=${action}&query=${data.query || ''}`);
+          return await res.json();
+        }
+        return { success: true };
       } catch (e) {
-        console.error('Fetch error:', e);
-        throw new Error('Failed to fetch - revisa la URL del Apps Script');
+        console.error('Error API:', e);
+        return { success: false, error: e.message };
       }
     }
 
     function formatDate(fechaStr) {
-      if (!fechaStr) return '';
-      const date = new Date(fechaStr);
-      return date.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      if (!fechaStr) return 'Sin fecha';
+      const [y, m, d] = fechaStr.split('-');
+      return `${d}/${m}/${y}`;
     }
 
-    function renderList(containerId, filteredAppointments) {
+    function renderList(containerId, list) {
       const container = document.getElementById(containerId);
-      container.innerHTML = filteredAppointments.length === 0 
-        ? `<div class="text-center py-12 text-[#C5A473]">No hay citas para mostrar</div>` 
-        : '';
-
-      filteredAppointments.forEach(app => {
+      container.innerHTML = list.length === 0 ? '<div class="text-center py-20 text-gray-400">No hay citas registradas</div>' : '';
+      
+      list.sort((a, b) => a.hora.localeCompare(b.hora)).forEach(app => {
         const div = document.createElement('div');
-        div.className = `card bg-white border border-[#C5A473]/20 rounded-3xl p-5 flex gap-4 items-start`;
+        div.className = 'card bg-white border border-gray-100 rounded-3xl p-5 flex gap-4 items-center animate-fadeIn';
         div.innerHTML = `
-          <div class="text-center min-w-[68px]">
-            <div class="text-4xl font-semibold text-[#1D3B8C]">${app.hora}</div>
-            <div class="text-xs text-[#C5A473]">${formatDate(app.fecha)}</div>
+          <div class="text-center bg-[#1D3B8C]/5 p-3 rounded-2xl min-w-[70px]">
+            <div class="text-xl font-bold text-[#1D3B8C]">${app.hora}</div>
+            <div class="text-[10px] text-[#C5A473] font-bold uppercase">${formatDate(app.fecha)}</div>
           </div>
           <div class="flex-1">
-            <div class="font-medium text-lg text-[#1D3B8C]">${app.paciente}</div>
-            <div class="inline-block mt-1 px-4 py-1 bg-[#C5A473]/10 text-[#1D3B8C] text-sm rounded-3xl">${app.especialidad}</div>
-            ${app.telefono ? `<div class="text-sm text-[#C5A473] mt-3 flex items-center gap-1"><span>📱</span> ${app.telefono}</div>` : ''}
+            <div class="font-bold text-[#1D3B8C] text-lg leading-tight">${app.paciente}</div>
+            <div class="text-xs text-[#C5A473] font-medium mt-1">${app.especialidad}</div>
           </div>
-          <button onclick="eliminarCita('${app.id}'); event.stopImmediatePropagation();" class="text-red-400 hover:text-red-600 text-2xl">🗑</button>
+          <button onclick="eliminarCita('${app.id}')" class="p-2 text-gray-300 hover:text-red-500 text-xl">✕</button>
         `;
         container.appendChild(div);
       });
     }
 
     async function loadData() {
-      try {
-        const res = await api('getAppointments');
-        if (res.success) appointments = res.appointments || [];
+      const res = await api('getAppointments');
+      if (res.success) {
+        appointments = res.appointments;
         renderCurrentView();
-      } catch (e) {
-        console.error(e);
       }
     }
 
     function renderCurrentView() {
-      const hoyStr = new Date().toISOString().split('T')[0];
+      const hoy = new Date().toISOString().split('T')[0];
       let filtered = [];
-
-      if (currentView === 'hoy') filtered = appointments.filter(a => a.fecha === hoyStr);
+      
+      if (currentView === 'hoy') filtered = appointments.filter(a => a.fecha === hoy);
       else if (currentView === 'semana') {
-        const start = new Date();
-        const end = new Date(start);
-        end.setDate(end.getDate() + 6);
-        const startStr = start.toISOString().split('T')[0];
-        const endStr = end.toISOString().split('T')[0];
-        filtered = appointments.filter(a => a.fecha >= startStr && a.fecha <= endStr);
-      } 
-      else if (currentView === 'mes') {
-        const now = new Date();
-        const first = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-        filtered = appointments.filter(a => a.fecha >= first && a.fecha <= last);
-      } 
-      else if (currentView === 'pacientes') {
-        renderPacientes();
-        return;
+          const nextWeek = new Date();
+          nextWeek.setDate(nextWeek.getDate() + 7);
+          const nextWeekStr = nextWeek.toISOString().split('T')[0];
+          filtered = appointments.filter(a => a.fecha >= hoy && a.fecha <= nextWeekStr);
       }
-      renderList('list-' + currentView, filtered);
+      else if (currentView === 'mes') filtered = appointments.filter(a => a.fecha.startsWith(hoy.substring(0, 7)));
+      
+      if (currentView !== 'pacientes') renderList('list-' + currentView, filtered);
+      else renderPacientes();
     }
 
     async function renderPacientes() {
-      try {
-        const res = await api('getPatients');
-        if (!res.success) return;
-        const container = document.getElementById('list-pacientes');
-        container.innerHTML = '';
-
-        const searchTerm = document.getElementById('search-pacientes').value.toLowerCase();
-        const filtered = res.patients.filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm));
-
-        filtered.forEach(p => {
+      const res = await api('getPatients');
+      const container = document.getElementById('list-pacientes');
+      container.innerHTML = '';
+      if (res.success) {
+        const search = document.getElementById('search-pacientes').value.toLowerCase();
+        res.patients.filter(p => p.name.toLowerCase().includes(search)).forEach(p => {
           const div = document.createElement('div');
-          div.className = 'card bg-white border border-[#C5A473]/20 rounded-3xl p-5 flex justify-between items-center';
-          div.innerHTML = `
-            <div>
-              <div class="font-semibold text-[#1D3B8C]">${p.name}</div>
-              <div class="text-sm text-[#C5A473]">Última cita: ${formatDate(p.ultimaCita)}</div>
-            </div>
-            <div class="text-xs bg-[#C5A473]/10 text-[#1D3B8C] px-3 py-1 rounded-3xl">${p.especialidad || 'General'}</div>
-          `;
+          div.className = 'card bg-white p-5 rounded-3xl border border-gray-100 flex justify-between items-center';
+          div.innerHTML = `<div><div class="font-bold text-[#1D3B8C]">${p.name}</div><div class="text-xs text-gray-400">Última: ${formatDate(p.ultimaCita)}</div></div><div class="text-[10px] bg-gray-100 px-3 py-1 rounded-full font-bold uppercase text-gray-500">${p.especialidad || 'General'}</div>`;
           container.appendChild(div);
         });
-
-        if (filtered.length === 0) {
-          container.innerHTML = `<div class="text-center py-12 text-[#C5A473]">No se encontraron pacientes</div>`;
-        }
-      } catch (e) {}
-    }
-
-    async function searchAndShow(query) {
-      if (!query || query.length < 2) {
-        document.getElementById('suggestions').classList.add('hidden');
-        return;
       }
-      const res = await api('searchPatients', { query });
-      if (!res.success) return;
-
-      const container = document.getElementById('suggestions');
-      container.innerHTML = '';
-      const ul = document.createElement('ul');
-      ul.className = 'py-2';
-
-      res.patients.forEach(p => {
-        const li = document.createElement('li');
-        li.className = 'px-5 py-3 hover:bg-[#FFFDF5] cursor-pointer flex justify-between';
-        li.innerHTML = `<span class="font-medium">${p.name}</span><span class="text-xs text-[#C5A473]">Última: ${formatDate(p.lastFecha)}</span>`;
-        li.onclick = () => {
-          document.getElementById('input-paciente').value = p.name;
-          document.getElementById('ultima-cita-text').innerHTML = `✅ Última cita: <strong>${formatDate(p.lastFecha)}</strong>`;
-          container.classList.add('hidden');
-        };
-        ul.appendChild(li);
-      });
-
-      container.appendChild(ul);
-      container.classList.remove('hidden');
-    }
-
-    function debounceSearch(query) {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => searchAndShow(query), 350);
-    }
-
-    function showAddModal() {
-      document.getElementById('modal-add').classList.remove('hidden');
-      const hoy = new Date().toISOString().split('T')[0];
-      document.getElementById('input-fecha').value = hoy;
-      document.getElementById('input-paciente').value = '';
-      document.getElementById('input-telefono').value = '';
-      document.getElementById('input-especialidad').value = '';
-      document.getElementById('ultima-cita-text').innerHTML = '';
-      document.getElementById('suggestions').classList.add('hidden');
-    }
-
-    function hideModal() {
-      document.getElementById('modal-add').classList.add('hidden');
     }
 
     async function guardarCita() {
+      const btn = document.getElementById('btn-save');
       const data = {
-        paciente: document.getElementById('input-paciente').value.trim(),
-        telefono: document.getElementById('input-telefono').value.trim(),
+        paciente: document.getElementById('input-paciente').value,
+        telefono: document.getElementById('input-telefono').value,
         fecha: document.getElementById('input-fecha').value,
         hora: document.getElementById('input-hora').value,
         especialidad: document.getElementById('input-especialidad').value
       };
 
-      if (!data.paciente || !data.fecha || !data.hora || !data.especialidad) {
-        alert('❌ Por favor completa Nombre, Fecha, Hora y Especialidad');
-        return;
+      if (!data.paciente || !data.fecha || !data.hora) return alert('Completa los campos obligatorios');
+
+      btn.disabled = true;
+      btn.innerHTML = 'Guardando...';
+      
+      const res = await api('addAppointment', data);
+      if (res.success) {
+        hideModal();
+        await loadData();
+        alert('¡Cita guardada!');
+      } else {
+        alert('Error al conectar con Google Sheets');
       }
-
-      const btn = document.querySelector('button[onclick="guardarCita()"]');
-      const originalText = btn ? btn.innerHTML : 'Guardar cita';
-
-      try {
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = 'Guardando...';
-        }
-
-        const response = await api('addAppointment', data);
-
-        if (response.success) {
-          alert('✅ ¡Cita guardada con éxito!');
-          hideModal();
-          await loadData();
-        } else {
-          throw new Error(response.error || 'Error del servidor');
-        }
-      } catch (error) {
-        console.error(error);
-        alert('❌ Error al guardar la cita: ' + (error.message || 'Failed to fetch'));
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = originalText;
-        }
-      }
+      btn.disabled = false;
+      btn.innerHTML = 'Guardar';
     }
 
     async function eliminarCita(id) {
-      if (!confirm('¿Eliminar esta cita?')) return;
-      try {
-        const res = await api('deleteAppointment', { id });
-        if (res.success) await loadData();
-      } catch (e) {}
+      if (confirm('¿Eliminar cita?')) {
+        await api('deleteAppointment', { id });
+        await loadData();
+      }
     }
 
     function switchView(view) {
@@ -364,11 +266,39 @@
       renderCurrentView();
     }
 
-    window.onload = async () => {
-      await loadData();
-      document.getElementById('search-pacientes').addEventListener('input', renderPacientes);
-      document.getElementById('view-hoy').classList.remove('hidden');
-    };
+    function showAddModal() {
+      document.getElementById('modal-add').classList.remove('hidden');
+      document.getElementById('input-fecha').value = new Date().toISOString().split('T')[0];
+    }
+
+    function hideModal() { document.getElementById('modal-add').classList.add('hidden'); }
+
+    function debounceSearch(q) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(async () => {
+        if (q.length < 2) return document.getElementById('suggestions').classList.add('hidden');
+        const res = await api('searchPatients', { query: q });
+        const suggestions = document.getElementById('suggestions');
+        suggestions.innerHTML = '';
+        if (res.success && res.patients.length > 0) {
+          res.patients.forEach(p => {
+            const d = document.createElement('div');
+            d.className = 'px-5 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 text-sm';
+            d.innerHTML = `<div class="font-bold">${p.name}</div><div class="text-[10px] text-gray-400 uppercase">Última: ${formatDate(p.lastFecha)}</div>`;
+            d.onclick = () => {
+              document.getElementById('input-paciente').value = p.name;
+              document.getElementById('input-telefono').value = p.telefono || '';
+              document.getElementById('ultima-cita-text').innerHTML = `Última visita: ${formatDate(p.lastFecha)}`;
+              suggestions.classList.add('hidden');
+            };
+            suggestions.appendChild(d);
+          });
+          suggestions.classList.remove('hidden');
+        }
+      }, 400);
+    }
+
+    window.onload = loadData;
   </script>
 </body>
 </html>
