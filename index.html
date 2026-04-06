@@ -158,28 +158,32 @@
     }
 
     function formatDate(fechaStr) {
-      if (!fechaStr) return 'Sin fecha';
-      const [y, m, d] = fechaStr.split('-');
+      if (!fechaStr) return '';
+      // Esto quita la "T06:00..." que vimos en tu captura de Karla
+      const fechaLimpia = String(fechaStr).split('T')[0]; 
+      const [y, m, d] = fechaLimpia.split('-');
       return `${d}/${m}/${y}`;
     }
 
-    function renderList(containerId, list) {
+    function renderList(containerId, filteredAppointments) {
       const container = document.getElementById(containerId);
-      container.innerHTML = list.length === 0 ? '<div class="text-center py-20 text-gray-400">No hay citas registradas</div>' : '';
-      
-      list.sort((a, b) => a.hora.localeCompare(b.hora)).forEach(app => {
+      container.innerHTML = filteredAppointments.length === 0 
+        ? `<div class="text-center py-12 text-[#C5A473]">No hay citas para mostrar</div>` 
+        : '';
+
+      filteredAppointments.forEach(app => {
         const div = document.createElement('div');
-        div.className = 'card bg-white border border-gray-100 rounded-3xl p-5 flex gap-4 items-center animate-fadeIn';
+        div.className = `card bg-white border border-[#C5A473]/20 rounded-3xl p-5 flex gap-4 items-center`;
         div.innerHTML = `
-          <div class="text-center bg-[#1D3B8C]/5 p-3 rounded-2xl min-w-[70px]">
+          <div class="text-center min-w-[70px] bg-[#1D3B8C]/5 p-2 rounded-2xl">
             <div class="text-xl font-bold text-[#1D3B8C]">${app.hora}</div>
-            <div class="text-[10px] text-[#C5A473] font-bold uppercase">${formatDate(app.fecha)}</div>
+            <div class="text-[10px] text-[#C5A473] font-bold">${formatDate(app.fecha)}</div>
           </div>
           <div class="flex-1">
             <div class="font-bold text-[#1D3B8C] text-lg leading-tight">${app.paciente}</div>
-            <div class="text-xs text-[#C5A473] font-medium mt-1">${app.especialidad}</div>
+            <div class="text-xs text-[#C5A473] font-medium">${app.especialidad || 'General'}</div>
           </div>
-          <button onclick="eliminarCita('${app.id}')" class="p-2 text-gray-300 hover:text-red-500 text-xl">✕</button>
+          <button onclick="eliminarCita('${app.id}')" class="text-red-400 p-2 text-xl active:scale-90">✕</button>
         `;
         container.appendChild(div);
       });
