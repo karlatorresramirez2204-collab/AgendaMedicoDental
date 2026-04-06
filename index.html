@@ -192,6 +192,9 @@
         appointments = res.appointments || [];
         renderCurrentView();
       }
+      //Limpieza de scripts viejos
+      const oldScripts = document.querySelectorAll ('scripts[scr*="callback=handleData"]');
+      oldScripts.forEach(s => s.remove());
     }
 
     function renderCurrentView() {
@@ -287,10 +290,10 @@
     }
 
     // Nueva función necesaria para recibir los resultados de búsqueda
-    function handleSearchData(res) {
+   function handleSearchData(res) {
       const suggestions = document.getElementById('suggestions');
       suggestions.innerHTML = '';
-      if (res.success && res.patients.length > 0) {
+      if (res && res.success && res.patients) {
         res.patients.forEach(p => {
           const d = document.createElement('div');
           d.className = 'px-5 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 text-sm';
@@ -305,7 +308,6 @@
         });
         suggestions.classList.remove('hidden');
       }
-      // Limpiamos el script
       const oldScripts = document.querySelectorAll('script[src*="callback=handleSearchData"]');
       oldScripts.forEach(s => s.remove());
     }
