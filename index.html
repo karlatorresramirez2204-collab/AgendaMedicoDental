@@ -187,10 +187,14 @@
       document.body.appendChild(script);
     }
 function handleData(res) {
+      console.log("Datos recibidos de Google:", res); 
       if (res && res.success) {
         appointments = res.appointments || [];
-        renderCurrentView();
+        renderCurrentView(); 
       }
+      // Limpiamos el mensajero para que no se amontonen
+      const oldScripts = document.querySelectorAll('script[src*="callback=handleData"]');
+      oldScripts.forEach(s => s.remove());
     }
 
     function renderCurrentView() {
