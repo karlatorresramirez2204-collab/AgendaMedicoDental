@@ -3,85 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#1D3B8C">
   <title>Agenda Dental • Salud Médica Dental</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500&display=swap');
-    body { font-family: 'Inter', sans-serif; background-color: #FFFDF5; }
+    body { font-family: 'Inter', sans-serif; background-color: #FFFDF5; color: #1D3B8C; }
     h1 { font-family: 'Playfair Display', serif; }
-    .card { box-shadow: 0 10px 15px -3px rgb(197 164 115 / 0.15); border-radius: 1.5rem; background: white; margin-bottom: 1rem; padding: 1.25rem; border: 1px solid rgba(197, 164, 115, 0.1); }
-    .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #1D3B8C; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .card { background: white; border-radius: 1.5rem; padding: 1.25rem; border: 1px solid rgba(197, 164, 115, 0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    .view { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body class="pb-24">
 
-  <div class="bg-[#FFFDF5] border-b border-[#C5A473]/30 sticky top-0 z-50 px-6 py-4 flex items-center gap-3 shadow-sm">
-    <img src="logo.jpg" alt="Logo" class="h-12 w-12 object-contain rounded-xl">
+  <div class="bg-[#FFFDF5] border-b border-[#C5A473]/30 sticky top-0 z-50 px-6 py-4 flex items-center gap-3">
+    <img src="logo.jpg" alt="Logo" class="h-12 w-12 object-contain rounded-xl shadow-sm">
     <div>
       <h1 class="text-2xl text-[#1D3B8C]">Salud Médica Dental</h1>
-      <p class="text-[#C5A473] text-[10px] font-bold uppercase tracking-widest">Agenda Médica</p>
+      <p class="text-[#C5A473] text-[10px] font-bold uppercase tracking-tighter">Agenda Premium</p>
     </div>
   </div>
 
   <div class="max-w-xl mx-auto px-4 mt-6">
     <div id="view-hoy" class="view">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-[#1D3B8C]">Hoy</h2>
-        <button onclick="showAddModal()" class="bg-[#1D3B8C] text-white px-5 py-2.5 rounded-full shadow-lg active:scale-95 text-sm font-bold">+ Nueva cita</button>
+        <h2 class="text-2xl font-bold">Hoy</h2>
+        <button onclick="showAddModal()" class="bg-[#1D3B8C] text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-lg active:scale-95">+ Nueva cita</button>
       </div>
-      <div id="list-hoy"></div>
+      <div id="list-hoy" class="space-y-4"></div>
     </div>
 
-    <div id="view-semana" class="view hidden"><h2 class="text-2xl font-bold text-[#1D3B8C] mb-6">Esta semana</h2><div id="list-semana"></div></div>
-    <div id="view-mes" class="view hidden"><h2 class="text-2xl font-bold text-[#1D3B8C] mb-6">Este mes</h2><div id="list-mes"></div></div>
-
+    <div id="view-semana" class="view hidden"><h2 class="text-2xl font-bold mb-6">Esta Semana</h2><div id="list-semana" class="space-y-4"></div></div>
+    <div id="view-mes" class="view hidden"><h2 class="text-2xl font-bold mb-6">Todo el Mes</h2><div id="list-mes" class="space-y-4"></div></div>
     <div id="view-pacientes" class="view hidden">
-      <h2 class="text-2xl font-bold text-[#1D3B8C] mb-4">Pacientes</h2>
-      <input id="search-pacientes" type="text" placeholder="Buscar nombre..." oninput="debounceSearch(this.value)"
-             class="w-full border border-[#C5A473]/30 rounded-2xl px-5 py-3 mb-6 focus:outline-none">
-      <div id="list-pacientes"></div>
+      <h2 class="text-2xl font-bold mb-4">Pacientes</h2>
+      <input id="search-pacientes" type="text" placeholder="Buscar nombre..." oninput="debounceSearch(this.value)" class="w-full border border-[#C5A473]/40 rounded-2xl px-5 py-3 mb-6 focus:outline-none focus:border-[#1D3B8C]">
+      <div id="list-pacientes" class="space-y-4"></div>
     </div>
   </div>
 
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#C5A473]/20 max-w-xl mx-auto z-50 py-3 flex justify-around font-bold text-[9px] text-[#1D3B8C]">
-    <button onclick="switchView('hoy')" class="flex flex-col items-center gap-1"><span class="text-xl">📅</span>HOY</button>
-    <button onclick="switchView('semana')" class="flex flex-col items-center gap-1"><span class="text-xl">📆</span>SEMANA</button>
-    <button onclick="switchView('mes')" class="flex flex-col items-center gap-1"><span class="text-xl">📋</span>MES</button>
-    <button onclick="switchView('pacientes')" class="flex flex-col items-center gap-1"><span class="text-xl">👤</span>PACIENTES</button>
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#C5A473]/20 max-w-xl mx-auto z-50 py-3 flex justify-around shadow-2xl">
+    <button onclick="switchView('hoy')" class="flex flex-col items-center gap-1"><span class="text-xl">📅</span><span class="text-[9px] font-bold">HOY</span></button>
+    <button onclick="switchView('semana')" class="flex flex-col items-center gap-1"><span class="text-xl">📆</span><span class="text-[9px] font-bold">SEMANA</span></button>
+    <button onclick="switchView('mes')" class="flex flex-col items-center gap-1"><span class="text-xl">📋</span><span class="text-[9px] font-bold">MES</span></button>
+    <button onclick="switchView('pacientes')" class="flex flex-col items-center gap-1"><span class="text-xl">👤</span><span class="text-[9px] font-bold">PACIENTES</span></button>
   </div>
 
   <div id="modal-add" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-end">
     <div class="bg-white w-full max-w-xl mx-auto rounded-t-3xl p-6 shadow-2xl" onclick="event.stopPropagation()">
-      <h3 class="text-xl font-bold text-[#1D3B8C] mb-6">Nueva Cita</h3>
+      <h3 class="text-xl font-bold mb-6">Nueva Cita</h3>
       <div class="space-y-4">
-        <input id="input-paciente" type="text" placeholder="Nombre completo" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
-        <input id="input-telefono" type="tel" placeholder="Teléfono" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3">
-        <div class="grid grid-cols-2 gap-4">
-          <input id="input-fecha" type="date" class="border border-[#C5A473]/30 rounded-xl px-4 py-3">
-          <input id="input-hora" type="time" class="border border-[#C5A473]/30 rounded-xl px-4 py-3">
+        <div class="relative">
+          <input id="input-paciente" type="text" placeholder="Nombre del paciente" oninput="debounceSearch(this.value)" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
+          <div id="suggestions" class="hidden absolute w-full bg-white border border-[#C5A473]/30 mt-1 rounded-xl shadow-xl max-h-40 overflow-auto z-[110]"></div>
         </div>
+        <input id="input-telefono" type="tel" placeholder="Teléfono" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
+        <div class="grid grid-cols-2 gap-4">
+          <input id="input-fecha" type="date" class="border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
+          <input id="input-hora" type="time" class="border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
+        </div>
+        <select id="input-especialidad" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none bg-white">
+          <option value="Odontología General">Odontología General</option>
+          <option value="Ortodoncia">Ortodoncia</option>
+          <option value="Endodoncia">Endodoncia</option>
+          <option value="Maxilofacial">Maxilofacial</option>
+          <option value="Odontopediatría">Odontopediatría</option>
+        </select>
       </div>
       <div class="flex gap-4 mt-8">
-        <button onclick="hideModal()" class="flex-1 py-4 text-gray-400 font-bold text-xs uppercase tracking-widest">Cerrar</button>
+        <button onclick="hideModal()" class="flex-1 py-4 text-gray-400 font-bold text-xs uppercase">Cerrar</button>
         <button id="btn-save" onclick="guardarCita()" class="flex-1 py-4 bg-[#1D3B8C] text-white rounded-2xl font-bold shadow-lg">GUARDAR</button>
       </div>
     </div>
   </div>
 
   <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzkb5YpZB845gYW6gQLmR-kKYuMHd1jrOJoeTI6mfb7nRk0MUeyGs-QkZkjBeM5hZWH/exec';
+    // 1. PEGA AQUÍ TU NUEVA URL DE GOOGLE
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzfFWO0ipSTAmAElERN1FxpsOqpeEbenx24CFyR8PPHlmoVFgTuZWetrZEJbM5T2Mmp/exec';
+
     let appointments = [];
     let currentView = 'hoy';
 
-    // TRADUCTOR DE FECHAS (Corrige el error de la Foto 22)
-    function parseGoogleDate(dateStr) {
-      if (!dateStr) return null;
-      const clean = String(dateStr).split('T')[0];
-      const parts = clean.split('-');
-      if (parts.length === 3) return clean; // Retorna YYYY-MM-DD
-      return clean;
+    // Función para obtener la fecha de hoy en formato YYYY-MM-DD local
+    function getTodayStr() {
+      const hoy = new Date();
+      return hoy.toLocaleDateString('en-CA'); 
     }
 
     function loadData() {
@@ -92,53 +98,47 @@
 
     function handleData(res) {
       if (res && res.success) {
-        appointments = (res.appointments || []).map(a => ({
-          ...a,
-          fechaKey: parseGoogleDate(a.fecha)
-        }));
+        appointments = res.appointments || [];
         renderCurrentView();
       }
     }
 
     function renderCurrentView() {
-      const hoy = new Date();
-      const hoyStr = hoy.toLocaleDateString('en-CA'); // Obtiene YYYY-MM-DD
-      let filtered = [];
+      const hoyStr = getTodayStr();
+      let list = [];
 
       if (currentView === 'hoy') {
-        filtered = appointments.filter(a => a.fechaKey === hoyStr);
+        list = appointments.filter(a => a.fecha === hoyStr);
       } else if (currentView === 'semana') {
         const limite = new Date();
-        limite.setDate(hoy.getDate() + 7);
+        limite.setDate(new Date().getDate() + 7);
         const limiteStr = limite.toLocaleDateString('en-CA');
-        filtered = appointments.filter(a => a.fechaKey >= hoyStr && a.fechaKey <= limiteStr);
+        list = appointments.filter(a => a.fecha >= hoyStr && a.fecha <= limiteStr);
       } else if (currentView === 'mes') {
-        filtered = appointments.filter(a => {
-          const d = new Date(a.fechaKey + "T12:00:00");
-          return d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear();
-        });
+        const mesActual = new Date().getMonth();
+        list = appointments.filter(a => new Date(a.fecha + "T12:00:00").getMonth() === mesActual);
       } else if (currentView === 'pacientes') {
         renderPacientes(); return;
       }
-      draw(filtered, 'list-' + currentView);
+      drawList('list-' + currentView, list);
     }
 
-    function draw(data, id) {
+    function drawList(id, data) {
       const c = document.getElementById(id);
-      if(!c) return;
-      c.innerHTML = data.length === 0 ? '<p class="text-center py-16 text-[#C5A473]/60">Sin citas para hoy</p>' : '';
+      if (!c) return;
+      c.innerHTML = data.length === 0 ? '<div class="text-center py-20 text-[#C5A473]/50 font-medium italic">No hay citas para mostrar</div>' : '';
       data.sort((a,b) => a.hora.localeCompare(b.hora)).forEach(a => {
         const d = document.createElement('div');
-        d.className = 'card flex justify-between items-center';
-        d.innerHTML = `<div><div class="text-[#1D3B8C] font-bold text-lg">${a.paciente}</div><div class="text-gray-400 text-[10px]">${a.fechaKey} • ${a.hora}</div></div>
-                       <button onclick="eliminarCita('${a.id}')" class="text-red-200 p-2">✕</button>`;
+        d.className = 'card flex items-center justify-between mb-4';
+        d.innerHTML = `<div><div class="font-bold text-lg">${a.paciente}</div><div class="text-[#C5A473] text-[10px] font-bold uppercase">${a.especialidad}</div><div class="text-gray-400 text-[10px] mt-1">${a.fecha} • ${a.hora}</div></div>
+                       <button onclick="eliminarCita('${a.id}')" class="text-red-200 p-2 text-xl">✕</button>`;
         c.appendChild(d);
       });
     }
 
     function renderPacientes() {
       const c = document.getElementById('list-pacientes');
-      c.innerHTML = '<div class="loading-spinner mx-auto mt-12"></div>';
+      c.innerHTML = '<div class="text-center py-10 italic">Cargando pacientes...</div>';
       const s = document.createElement('script');
       s.src = `${WEB_APP_URL}?action=getPatients&callback=handleP&v=${Date.now()}`;
       document.body.appendChild(s);
@@ -150,10 +150,9 @@
       if(res.success) {
         res.patients.forEach(p => {
           const d = document.createElement('div');
-          d.className = 'card flex justify-between items-center';
-          const fv = parseGoogleDate(p.lastFecha);
-          d.innerHTML = `<div><div class="font-bold text-[#1D3B8C]">${p.name}</div><div class="text-[9px] text-gray-400 uppercase font-bold">Última: ${fv || 'N/A'}</div></div>
-                         <button onclick="document.getElementById('input-paciente').value='${p.name}'; showAddModal();" class="text-[#1D3B8C] font-bold text-[10px] bg-[#1D3B8C]/5 px-4 py-2 rounded-xl">+ CITA</button>`;
+          d.className = 'card flex justify-between items-center mb-4';
+          d.innerHTML = `<div><div class="font-bold">${p.name}</div><div class="text-[9px] text-gray-400 uppercase font-bold">Última: ${p.lastFecha}</div></div>
+                         <button onclick="document.getElementById('input-paciente').value='${p.name}'; document.getElementById('input-telefono').value='${p.telefono}'; showAddModal();" class="text-[#1D3B8C] font-bold text-[10px] bg-[#1D3B8C]/5 px-4 py-2 rounded-xl">+ CITA</button>`;
           c.appendChild(d);
         });
       }
@@ -161,17 +160,48 @@
 
     async function guardarCita() {
       const btn = document.getElementById('btn-save');
-      const data = { paciente: document.getElementById('input-paciente').value, fecha: document.getElementById('input-fecha').value, hora: document.getElementById('input-hora').value };
-      if (!data.paciente || !data.fecha || !data.hora) return alert('Completa los datos');
-      btn.disabled = true;
-      const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addAppointment', data }) }).then(r => r.json());
-      if (res.success) { hideModal(); loadData(); }
-      btn.disabled = false;
+      const data = { paciente: document.getElementById('input-paciente').value, telefono: document.getElementById('input-telefono').value, fecha: document.getElementById('input-fecha').value, hora: document.getElementById('input-hora').value, especialidad: document.getElementById('input-especialidad').value };
+      if (!data.paciente || !data.fecha || !data.hora) return alert('Por favor, llena los campos básicos');
+      btn.disabled = true; btn.innerHTML = "Guardando...";
+      try {
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addAppointment', data }) }).then(r => r.json());
+        if (res.success) { hideModal(); loadData(); }
+      } catch (e) { alert('Error al guardar'); }
+      btn.disabled = false; btn.innerHTML = "GUARDAR";
+    }
+
+    async function eliminarCita(id) {
+      if (!confirm('¿Seguro que deseas eliminar esta cita?')) return;
+      try {
+        await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteAppointment', data: { id } }) });
+        loadData();
+      } catch (e) { alert('Error al eliminar'); }
     }
 
     function switchView(v) { currentView = v; document.querySelectorAll('.view').forEach(e => e.classList.add('hidden')); document.getElementById('view-'+v).classList.remove('hidden'); renderCurrentView(); }
-    function showAddModal() { document.getElementById('modal-add').classList.remove('hidden'); }
+    function showAddModal() { document.getElementById('modal-add').classList.remove('hidden'); document.getElementById('input-fecha').value = getTodayStr(); }
     function hideModal() { document.getElementById('modal-add').classList.add('hidden'); }
+    function debounceSearch(q) { 
+      clearTimeout(window.t); 
+      if(q.length<2) { document.getElementById('suggestions').classList.add('hidden'); return; }
+      window.t = setTimeout(() => {
+        const s = document.createElement('script');
+        s.src = `${WEB_APP_URL}?action=searchPatients&query=${q}&callback=hS`;
+        document.body.appendChild(s);
+      }, 400);
+    }
+    window.hS = (res) => {
+      const sug = document.getElementById('suggestions'); sug.innerHTML = '';
+      if(res.success && res.patients.length > 0) {
+        sug.classList.remove('hidden');
+        res.patients.forEach(p => {
+          const d = document.createElement('div'); d.className = 'p-3 hover:bg-gray-50 cursor-pointer border-b text-sm font-medium'; d.innerHTML = p.name;
+          d.onclick = () => { document.getElementById('input-paciente').value = p.name; document.getElementById('input-telefono').value = p.telefono; sug.classList.add('hidden'); };
+          sug.appendChild(d);
+        });
+      }
+    };
+
     window.onload = loadData;
   </script>
 </body>
