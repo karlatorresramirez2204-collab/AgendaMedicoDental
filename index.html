@@ -189,28 +189,33 @@
       });
     }
 
-    async function loadData() {
-      const res = await api('getAppointments');
-      if (res.success) {
-        appointments = res.appointments;
+    function loadData() {
+      const script = document.createElement('script');
+      script.src = `${WEB_APP_URL}?action=getAppointments&callback=handleData`;
+      document.body.appendChild(script);
+    }
+
+   function handleData(res) {
+      if (res && res.success) {
+        appointments = res.appointments || [];
         renderCurrentView();
       }
     }
 
-   function renderCurrentView() {
+    function renderCurrentView() {
       const hoy = new Date();
       const hoyStr = hoy.toISOString().split('T')[0];
       let filtered = [];
 
       if (currentView === 'hoy') {
-        filtered = appointments.filter(a => a.fecha.split('T')[0] === hoyStr);
+        filtered = appointments.filter(a => String(a.fecha).includes(hoyStr));
       } 
       else if (currentView === 'semana') {
         const unaSemanaDespues = new Date();
         unaSemanaDespues.setDate(hoy.getDate() + 7);
         const limiteStr = unaSemanaDespues.toISOString().split('T')[0];
         filtered = appointments.filter(a => {
-          const f = a.fecha.split('T')[0];
+          const f = String(a.fecha).split('T')[0];
           return f >= hoyStr && f <= limiteStr;
         });
       } 
