@@ -135,24 +135,24 @@
     let debounceTimer = null;
 
     // Función API mejorada con manejo de errores silenciosos para evitar bloqueos
-    async function api(action, data = {}) {
+   async function api(action, data = {}) {
       try {
-        const response = await fetch(WEB_APP_URL, {
-          method: 'POST',
-          mode: 'no-cors', // Evita errores de seguridad de navegador
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action, data })
-        });
-        
-        // Como usamos no-cors, la respuesta viene vacía. 
-        // Hacemos una segunda llamada para obtener datos si es necesario (GET)
+        // Si es para leer datos, usamos una URL con parámetros (GET)
         if (action === 'getAppointments' || action === 'getPatients' || action === 'searchPatients') {
-          const res = await fetch(`${WEB_APP_URL}?action=${action}&query=${data.query || ''}`);
+          const url = `${WEB_APP_URL}?action=${action}&query=${data.query || ''}`;
+          const res = await fetch(url);
           return await res.json();
         }
-        return { success: true };
+
+        // Si es para guardar o borrar, usamos POST
+        const res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Truco para evitar bloqueos
+          body: JSON.stringify({ action, data })
+        });
+        return await res.json();
       } catch (e) {
-        console.error('Error API:', e);
+        console.error('Error en API:', e);
         return { success: false, error: e.message };
       }
     }
