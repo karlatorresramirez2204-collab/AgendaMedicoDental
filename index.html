@@ -137,17 +137,9 @@
     // Función API mejorada con manejo de errores silenciosos para evitar bloqueos
    async function api(action, data = {}) {
       try {
-        // Si es para leer datos, usamos una URL con parámetros (GET)
-        if (action === 'getAppointments' || action === 'getPatients' || action === 'searchPatients') {
-          const url = `${WEB_APP_URL}?action=${action}&query=${data.query || ''}`;
-          const res = await fetch(url);
-          return await res.json();
-        }
-
-        // Si es para guardar o borrar, usamos POST
         const res = await fetch(WEB_APP_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Truco para evitar bloqueos
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action, data })
         });
         return await res.json();
@@ -282,29 +274,40 @@
 
     function hideModal() { document.getElementById('modal-add').classList.add('hidden'); }
 
-    function debounceSearch(q) {
+   function debounceSearch(q) {
       clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(async () => {
+      debounceTimer = setTimeout(() => {
         if (q.length < 2) return document.getElementById('suggestions').classList.add('hidden');
-        const res = await api('searchPatients', { query: q });
-        const suggestions = document.getElementById('suggestions');
-        suggestions.innerHTML = '';
-        if (res.success && res.patients.length > 0) {
-          res.patients.forEach(p => {
-            const d = document.createElement('div');
-            d.className = 'px-5 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 text-sm';
-            d.innerHTML = `<div class="font-bold">${p.name}</div><div class="text-[10px] text-gray-400 uppercase">Última: ${formatDate(p.lastFecha)}</div>`;
-            d.onclick = () => {
-              document.getElementById('input-paciente').value = p.name;
-              document.getElementById('input-telefono').value = p.telefono || '';
-              document.getElementById('ultima-cita-text').innerHTML = `Última visita: ${formatDate(p.lastFecha)}`;
-              suggestions.classList.add('hidden');
-            };
-            suggestions.appendChild(d);
-          });
-          suggestions.classList.remove('hidden');
-        }
+        
+        // Creamos el túnel para buscar pacientes
+        const script = document.createElement('script');
+        script.src = `${WEB_APP_URL}?action=searchPatients&query=${q}&callback=handleSearchData`;
+        document.body.appendChild(script);
       }, 400);
+    }
+
+    // Nueva función necesaria para recibir los resultados de búsqueda
+    function handleSearchData(res) {
+      const suggestions = document.getElementById('suggestions');
+      suggestions.innerHTML = '';
+      if (res.success && res.patients.length > 0) {
+        res.patients.forEach(p => {
+          const d = document.createElement('div');
+          d.className = 'px-5 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 text-sm';
+          d.innerHTML = `<div class="font-bold">${p.name}</div><div class="text-[10px] text-gray-400 uppercase">Última: ${formatDate(p.lastFecha)}</div>`;
+          d.onclick = () => {
+            document.getElementById('input-paciente').value = p.name;
+            document.getElementById('input-telefono').value = p.telefono || '';
+            document.getElementById('ultima-cita-text').innerHTML = `Última visita: ${formatDate(p.lastFecha)}`;
+            suggestions.classList.add('hidden');
+          };
+          suggestions.appendChild(d);
+        });
+        suggestions.classList.remove('hidden');
+      }
+      // Limpiamos el script
+      const oldScripts = document.querySelectorAll('script[src*="callback=handleSearchData"]');
+      oldScripts.forEach(s => s.remove());
     }
 
     window.onload = loadData;
