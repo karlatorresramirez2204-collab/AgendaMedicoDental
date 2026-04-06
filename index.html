@@ -13,12 +13,11 @@
     .card { box-shadow: 0 10px 15px -3px rgb(197 164 115 / 0.15); border-radius: 1.5rem; }
     .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #1D3B8C; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .notebook-bg { background: #FFFDF5; }
   </style>
 </head>
 <body class="pb-20">
 
-  <div class="bg-[#FFFDF5] border-b border-[#C5A473]/30 sticky top-0 z-50">
+  <div class="bg-[#FFFDF5] border-b border-[#C5A473]/30 sticky top-0 z-50 shadow-sm">
     <div class="max-w-xl mx-auto px-6 py-4 flex items-center gap-3">
       <img src="logo.jpg" alt="Logo" class="h-12 w-12 object-contain rounded-xl">
       <div>
@@ -63,7 +62,7 @@
   </div>
 
   <div id="modal-add" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-end">
-    <div class="bg-white w-full max-w-xl mx-auto rounded-t-3xl p-6 shadow-2xl">
+    <div class="bg-white w-full max-w-xl mx-auto rounded-t-3xl p-6 shadow-2xl" onclick="event.stopPropagation()">
       <h3 class="text-xl font-bold text-[#1D3B8C] mb-6">Registrar Cita</h3>
       <div class="space-y-4">
         <div class="relative">
@@ -80,10 +79,12 @@
           <option value="Odontología General">Odontología General</option>
           <option value="Ortodoncia">Ortodoncia</option>
           <option value="Endodoncia">Endodoncia</option>
+          <option value="Maxilofacial">Maxilofacial</option>
+          <option value="Odontopediatría">Odontopediatría</option>
         </select>
       </div>
       <div class="flex gap-4 mt-8">
-        <button onclick="hideModal()" class="flex-1 py-3 text-gray-500 font-bold">CANCELAR</button>
+        <button onclick="hideModal()" class="flex-1 py-3 text-gray-500 font-bold uppercase tracking-widest text-xs">CANCELAR</button>
         <button id="btn-save" onclick="guardarCita()" class="flex-1 py-3 bg-[#1D3B8C] text-white rounded-xl font-bold">GUARDAR</button>
       </div>
     </div>
@@ -95,7 +96,7 @@
     let currentView = 'hoy';
     let debounceTimer = null;
 
-    // Conexión segura con Google
+    // 1. CARGA INICIAL
     function loadData() {
       const script = document.createElement('script');
       script.src = `${WEB_APP_URL}?action=getAppointments&callback=handleData`;
@@ -103,32 +104,41 @@
     }
 
     function handleData(res) {
-      console.log("Datos recibidos:", res);
+      console.log("Citas recibidas:", res);
       if (res && res.success) {
-        appointments = res.appointments || [];
+        // Limpiamos las fechas de Google Sheets para evitar desfases de horario
+        appointments = (res.appointments || []).map(a => ({
+          ...a,
+          fechaLimpia: String(a.fecha).split('T')[0]
+        }));
         renderCurrentView();
       }
       cleanupScripts('handleData');
     }
 
+    // 2. FILTRADO Y VISTAS
     function renderCurrentView() {
       const hoy = new Date();
-      const hoyStr = hoy.toISOString().split('T')[0];
+      // Ajuste de zona horaria para México
+      const offset = hoy.getTimezoneOffset() * 60000;
+      const hoyStr = new Date(hoy - offset).toISOString().split('T')[0];
+      
       let filtered = [];
 
       if (currentView === 'hoy') {
-        filtered = appointments.filter(a => String(a.fecha).includes(hoyStr));
+        filtered = appointments.filter(a => a.fechaLimpia === hoyStr);
       } else if (currentView === 'semana') {
         const limite = new Date();
         limite.setDate(hoy.getDate() + 7);
-        const limiteStr = limite.toISOString().split('T')[0];
-        filtered = appointments.filter(a => {
-          const f = String(a.fecha).split('T')[0];
-          return f >= hoyStr && f <= limiteStr;
-        });
+        const limiteStr = new Date(limite - offset).toISOString().split('T')[0];
+        filtered = appointments.filter(a => a.fechaLimpia >= hoyStr && a.fechaLimpia <= limiteStr);
       } else if (currentView === 'mes') {
         const mesActual = hoy.getMonth();
-        filtered = appointments.filter(a => new Date(a.fecha).getMonth() === mesActual);
+        const añoActual = hoy.getFullYear();
+        filtered = appointments.filter(a => {
+          const d = new Date(a.fecha);
+          return d.getMonth() === mesActual && d.getFullYear() === añoActual;
+        });
       } else if (currentView === 'pacientes') {
         renderPacientes();
         return;
@@ -139,25 +149,27 @@
     function renderList(containerId, list) {
       const container = document.getElementById(containerId);
       if (!container) return;
-      container.innerHTML = list.length === 0 ? '<p class="text-center py-10 text-[#C5A473]">No hay citas registradas</p>' : '';
-      list.forEach(app => {
+      container.innerHTML = list.length === 0 ? '<div class="text-center py-12 text-[#C5A473]">No hay citas registradas</div>' : '';
+      
+      list.sort((a, b) => a.hora.localeCompare(b.hora)).forEach(app => {
         const div = document.createElement('div');
         div.className = 'card bg-white p-5 flex items-center justify-between border border-[#C5A473]/10 mb-4';
         div.innerHTML = `
           <div>
             <div class="text-[#1D3B8C] font-bold text-lg">${app.paciente}</div>
-            <div class="text-[#C5A473] text-xs font-medium uppercase">${app.especialidad}</div>
+            <div class="text-[#C5A473] text-xs font-medium uppercase">${app.especialidad || 'General'}</div>
             <div class="text-gray-400 text-[10px] mt-1">${formatDate(app.fecha)} • ${app.hora}</div>
           </div>
-          <button onclick="eliminarCita('${app.id}')" class="text-red-300 px-2 text-xl">✕</button>
+          <button onclick="eliminarCita('${app.id}')" class="text-red-300 px-2 text-xl active:scale-90">✕</button>
         `;
         container.appendChild(div);
       });
     }
 
+    // 3. PACIENTES Y BÚSQUEDA
     function renderPacientes() {
       const container = document.getElementById('list-pacientes');
-      container.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+      container.innerHTML = '<div class="loading-spinner mx-auto mt-10"></div>';
       const script = document.createElement('script');
       script.src = `${WEB_APP_URL}?action=getPatients&callback=handlePatients`;
       document.body.appendChild(script);
@@ -170,8 +182,12 @@
         res.patients.forEach(p => {
           const div = document.createElement('div');
           div.className = 'card bg-white p-5 flex justify-between items-center border border-[#C5A473]/10';
-          div.innerHTML = `<div><div class="font-bold text-[#1D3B8C]">${p.name}</div><div class="text-[10px] text-gray-400">Última: ${formatDate(p.lastFecha)}</div></div>
-                           <button onclick="document.getElementById('input-paciente').value='${p.name}'; showAddModal();" class="text-[#1D3B8C] font-bold text-sm">+ Cita</button>`;
+          div.innerHTML = `
+            <div>
+              <div class="font-bold text-[#1D3B8C]">${p.name}</div>
+              <div class="text-[10px] text-gray-400 uppercase font-bold">Última cita: ${formatDate(p.lastFecha)}</div>
+            </div>
+            <button onclick="document.getElementById('input-paciente').value='${p.name}'; showAddModal();" class="bg-[#1D3B8C]/5 text-[#1D3B8C] px-4 py-2 rounded-xl font-bold text-xs">+ CITA</button>`;
           container.appendChild(div);
         });
       }
@@ -195,8 +211,8 @@
         sug.classList.remove('hidden');
         res.patients.forEach(p => {
           const d = document.createElement('div');
-          d.className = 'p-3 hover:bg-gray-50 cursor-pointer border-b text-sm';
-          d.innerHTML = `<strong>${p.name}</strong>`;
+          d.className = 'p-3 hover:bg-gray-50 cursor-pointer border-b text-sm font-medium';
+          d.innerHTML = p.name;
           d.onclick = () => { document.getElementById('input-paciente').value = p.name; sug.classList.add('hidden'); };
           sug.appendChild(d);
         });
@@ -204,6 +220,7 @@
       cleanupScripts('handleSearch');
     }
 
+    // 4. ACCIONES (GUARDAR/ELIMINAR)
     async function guardarCita() {
       const btn = document.getElementById('btn-save');
       const data = {
@@ -213,25 +230,45 @@
         hora: document.getElementById('input-hora').value,
         especialidad: document.getElementById('input-especialidad').value
       };
-      if (!data.paciente || !data.fecha || !data.hora) return alert('Faltan datos');
+      if (!data.paciente || !data.fecha || !data.hora) return alert('Completa los campos obligatorios');
+      
       btn.disabled = true; btn.innerHTML = "...";
-      const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addAppointment', data }) }).then(r => r.json());
-      if (res.success) { hideModal(); loadData(); }
+      try {
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addAppointment', data }) }).then(r => r.json());
+        if (res.success) { hideModal(); loadData(); alert('¡Cita guardada!'); }
+      } catch (e) { alert('Error al conectar'); }
       btn.disabled = false; btn.innerHTML = "GUARDAR";
     }
 
     async function eliminarCita(id) {
-      if (confirm('¿Eliminar cita?')) {
+      if (!confirm('¿Eliminar cita?')) return;
+      try {
         await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteAppointment', data: { id } }) });
         loadData();
-      }
+      } catch (e) { alert('Error al eliminar'); }
     }
 
-    function switchView(v) { currentView = v; document.querySelectorAll('.view').forEach(e => e.classList.add('hidden')); document.getElementById('view-'+v).classList.remove('hidden'); renderCurrentView(); }
-    function showAddModal() { document.getElementById('modal-add').classList.remove('hidden'); document.getElementById('input-fecha').value = new Date().toISOString().split('T')[0]; }
+    // 5. UTILIDADES
+    function switchView(v) { 
+      currentView = v; 
+      document.querySelectorAll('.view').forEach(e => e.classList.add('hidden')); 
+      document.getElementById('view-'+v).classList.remove('hidden'); 
+      renderCurrentView(); 
+    }
+    function showAddModal() { 
+      document.getElementById('modal-add').classList.remove('hidden'); 
+      document.getElementById('input-fecha').value = new Date().toISOString().split('T')[0]; 
+    }
     function hideModal() { document.getElementById('modal-add').classList.add('hidden'); }
-    function formatDate(f) { if(!f) return ''; const d = new Date(f); return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; }
-    function cleanupScripts(name) { const scripts = document.querySelectorAll(`script[src*="callback=${name}"]`); scripts.forEach(s => s.remove()); }
+    function formatDate(f) { 
+      if(!f) return ''; 
+      const d = new Date(f); 
+      return d.toLocaleDateString('es-MX', {day:'2-digit', month:'2-digit', year:'numeric'});
+    }
+    function cleanupScripts(name) { 
+      const scripts = document.querySelectorAll(`script[src*="callback=${name}"]`); 
+      scripts.forEach(s => s.remove()); 
+    }
 
     window.onload = loadData;
   </script>
