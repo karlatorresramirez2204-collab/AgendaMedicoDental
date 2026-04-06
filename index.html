@@ -186,13 +186,12 @@
       script.src = `${WEB_APP_URL}?action=getAppointments&callback=handleData`;
       document.body.appendChild(script);
     }
-
-   function handleData(res) {
+function handleData(res) {
       if (res && res.success) {
         appointments = res.appointments || [];
         renderCurrentView();
       }
-    } // <-- Esta llave cierra el IF y la función handleData correctamente
+    }
 
     function renderCurrentView() {
       const hoy = new Date();
@@ -226,12 +225,18 @@
       renderList('list-' + currentView, filtered);
     }
 
-    async function renderPacientes() {
+    function renderPacientes() {
       const container = document.getElementById('list-pacientes');
       if (!container) return;
       container.innerHTML = '<div class="text-center py-8"><div class="loading-spinner mx-auto"></div></div>';
       
-      const res = await api('getPatients');
+      const script = document.createElement('script');
+      script.src = `${WEB_APP_URL}?action=getPatients&callback=handlePatientsData`;
+      document.body.appendChild(script);
+    }
+
+    function handlePatientsData(res) {
+      const container = document.getElementById('list-pacientes');
       if (res.success) {
         container.innerHTML = res.patients.length === 0 
           ? '<div class="text-center py-12 text-[#C5A473]">No hay pacientes registrados</div>' 
@@ -254,8 +259,10 @@
           container.appendChild(div);
         });
       }
+      const oldScripts = document.querySelectorAll('script[src*="callback=handlePatientsData"]');
+      oldScripts.forEach(s => s.remove());
     }
-
+    //hasta aqui debo pegar
     async function guardarCita() {
       const btn = document.getElementById('btn-save');
       const data = {
