@@ -9,7 +9,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500&display=swap');
     body { font-family: 'Inter', sans-serif; background-color: #FFFDF5; color: #1D3B8C; }
     h1 { font-family: 'Playfair Display', serif; }
-    .card { background: white; border-radius: 1.5rem; padding: 1.25rem; border: 1px solid rgba(197, 164, 115, 0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    .card { background: white; border-radius: 1.5rem; padding: 1.25rem; border: 1px solid rgba(197, 164, 115, 0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 1rem; }
     .view { animation: fadeIn 0.3s ease-in-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -35,40 +35,30 @@
 
     <div id="view-semana" class="view hidden"><h2 class="text-2xl font-bold mb-6">Esta Semana</h2><div id="list-semana" class="space-y-4"></div></div>
     <div id="view-mes" class="view hidden"><h2 class="text-2xl font-bold mb-6">Todo el Mes</h2><div id="list-mes" class="space-y-4"></div></div>
+    
     <div id="view-pacientes" class="view hidden">
       <h2 class="text-2xl font-bold mb-4">Pacientes</h2>
-      <input id="search-pacientes" type="text" placeholder="Buscar nombre..." oninput="debounceSearch(this.value)" class="w-full border border-[#C5A473]/40 rounded-2xl px-5 py-3 mb-6 focus:outline-none focus:border-[#1D3B8C]">
+      <input id="search-pacientes" type="text" placeholder="Buscar nombre..." oninput="debounceSearch(this.value)" class="w-full border border-[#C5A473]/40 rounded-2xl px-5 py-3 mb-6 focus:outline-none">
       <div id="list-pacientes" class="space-y-4"></div>
     </div>
   </div>
 
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#C5A473]/20 max-w-xl mx-auto z-50 py-3 flex justify-around shadow-2xl">
-    <button onclick="switchView('hoy')" class="flex flex-col items-center gap-1"><span class="text-xl">📅</span><span class="text-[9px] font-bold">HOY</span></button>
-    <button onclick="switchView('semana')" class="flex flex-col items-center gap-1"><span class="text-xl">📆</span><span class="text-[9px] font-bold">SEMANA</span></button>
-    <button onclick="switchView('mes')" class="flex flex-col items-center gap-1"><span class="text-xl">📋</span><span class="text-[9px] font-bold">MES</span></button>
-    <button onclick="switchView('pacientes')" class="flex flex-col items-center gap-1"><span class="text-xl">👤</span><span class="text-[9px] font-bold">PACIENTES</span></button>
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#C5A473]/20 max-w-xl mx-auto z-50 py-3 flex justify-around shadow-2xl font-bold text-[9px]">
+    <button onclick="switchView('hoy')" class="flex flex-col items-center"><span>📅</span>HOY</button>
+    <button onclick="switchView('semana')" class="flex flex-col items-center"><span>📆</span>SEMANA</button>
+    <button onclick="switchView('mes')" class="flex flex-col items-center"><span>📋</span>MES</button>
+    <button onclick="switchView('pacientes')" class="flex flex-col items-center"><span>👤</span>PACIENTES</button>
   </div>
 
   <div id="modal-add" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-end">
     <div class="bg-white w-full max-w-xl mx-auto rounded-t-3xl p-6 shadow-2xl" onclick="event.stopPropagation()">
       <h3 class="text-xl font-bold mb-6">Nueva Cita</h3>
       <div class="space-y-4">
-        <div class="relative">
-          <input id="input-paciente" type="text" placeholder="Nombre del paciente" oninput="debounceSearch(this.value)" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
-          <div id="suggestions" class="hidden absolute w-full bg-white border border-[#C5A473]/30 mt-1 rounded-xl shadow-xl max-h-40 overflow-auto z-[110]"></div>
-        </div>
-        <input id="input-telefono" type="tel" placeholder="Teléfono" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
+        <input id="input-paciente" type="text" placeholder="Nombre completo" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
         <div class="grid grid-cols-2 gap-4">
           <input id="input-fecha" type="date" class="border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
           <input id="input-hora" type="time" class="border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
         </div>
-        <select id="input-especialidad" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none bg-white">
-          <option value="Odontología General">Odontología General</option>
-          <option value="Ortodoncia">Ortodoncia</option>
-          <option value="Endodoncia">Endodoncia</option>
-          <option value="Maxilofacial">Maxilofacial</option>
-          <option value="Odontopediatría">Odontopediatría</option>
-        </select>
       </div>
       <div class="flex gap-4 mt-8">
         <button onclick="hideModal()" class="flex-1 py-4 text-gray-400 font-bold text-xs uppercase">Cerrar</button>
@@ -78,15 +68,14 @@
   </div>
 
   <script>
-    // URL RESTAURADA
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzkb5YpZB845gYW6gQLmR-kKYuMHd1jrOJoeTI6mfb7nRk0MUeyGs-QkZkjBeM5hZWH/exec';
-
     let appointments = [];
     let currentView = 'hoy';
 
-    function getTodayStr() {
-      const hoy = new Date();
-      return hoy.toLocaleDateString('en-CA'); 
+    // FUNCIÓN DE LIMPIEZA DE FECHAS (La clave de todo)
+    function clean(f) {
+      if(!f) return "";
+      return String(f).split('T')[0].trim();
     }
 
     function loadData() {
@@ -103,19 +92,20 @@
     }
 
     function renderCurrentView() {
-      const hoyStr = getTodayStr();
+      // Obtenemos hoy en formato YYYY-MM-DD
+      const hoy = new Date();
+      const hoyStr = hoy.toLocaleDateString('en-CA'); 
       let list = [];
 
       if (currentView === 'hoy') {
-        list = appointments.filter(a => a.fecha === hoyStr);
+        list = appointments.filter(a => clean(a.fecha) === hoyStr);
       } else if (currentView === 'semana') {
         const limite = new Date();
-        limite.setDate(new Date().getDate() + 7);
+        limite.setDate(hoy.getDate() + 7);
         const limiteStr = limite.toLocaleDateString('en-CA');
-        list = appointments.filter(a => a.fecha >= hoyStr && a.fecha <= limiteStr);
+        list = appointments.filter(a => clean(a.fecha) >= hoyStr && clean(a.fecha) <= limiteStr);
       } else if (currentView === 'mes') {
-        const mesActual = new Date().getMonth();
-        list = appointments.filter(a => new Date(a.fecha + "T12:00:00").getMonth() === mesActual);
+        list = appointments;
       } else if (currentView === 'pacientes') {
         renderPacientes(); return;
       }
@@ -125,11 +115,11 @@
     function drawList(id, data) {
       const c = document.getElementById(id);
       if (!c) return;
-      c.innerHTML = data.length === 0 ? '<div class="text-center py-20 text-[#C5A473]/50 font-medium italic">No hay citas para mostrar</div>' : '';
-      data.sort((a,b) => a.hora.localeCompare(b.hora)).forEach(a => {
+      c.innerHTML = data.length === 0 ? '<div class="text-center py-20 text-gray-400 font-medium italic">No hay citas registradas</div>' : '';
+      data.sort((a,b) => String(a.hora).localeCompare(String(b.hora))).forEach(a => {
         const d = document.createElement('div');
         d.className = 'card flex items-center justify-between mb-4';
-        d.innerHTML = `<div><div class="font-bold text-lg">${a.paciente}</div><div class="text-[#C5A473] text-[10px] font-bold uppercase">${a.especialidad}</div><div class="text-gray-400 text-[10px] mt-1">${a.fecha} • ${a.hora}</div></div>
+        d.innerHTML = `<div><div class="font-bold text-lg">${a.paciente}</div><div class="text-[#C5A473] text-[10px] font-bold uppercase">${a.especialidad || 'General'}</div><div class="text-gray-400 text-[10px] mt-1">${clean(a.fecha)} • ${a.hora}</div></div>
                        <button onclick="eliminarCita('${a.id}')" class="text-red-200 p-2 text-xl">✕</button>`;
         c.appendChild(d);
       });
@@ -150,35 +140,28 @@
         res.patients.forEach(p => {
           const d = document.createElement('div');
           d.className = 'card flex justify-between items-center mb-4';
-          d.innerHTML = `<div><div class="font-bold">${p.name}</div><div class="text-[9px] text-gray-400 uppercase font-bold">Última: ${p.lastFecha}</div></div>
-                         <button onclick="document.getElementById('input-paciente').value='${p.name}'; document.getElementById('input-telefono').value='${p.telefono}'; showAddModal();" class="text-[#1D3B8C] font-bold text-[10px] bg-[#1D3B8C]/5 px-4 py-2 rounded-xl">+ CITA</button>`;
+          d.innerHTML = `<div><div class="font-bold">${p.name}</div><div class="text-[9px] text-gray-400 uppercase font-bold">Última: ${clean(p.lastFecha)}</div></div>
+                         <button onclick="document.getElementById('input-paciente').value='${p.name}'; showAddModal();" class="text-[#1D3B8C] font-bold text-[10px] bg-[#1D3B8C]/5 px-4 py-2 rounded-xl">+ CITA</button>`;
           c.appendChild(d);
         });
       }
     };
 
     async function guardarCita() {
-      const btn = document.getElementById('btn-save');
-      const data = { paciente: document.getElementById('input-paciente').value, telefono: document.getElementById('input-telefono').value, fecha: document.getElementById('input-fecha').value, hora: document.getElementById('input-hora').value, especialidad: document.getElementById('input-especialidad').value };
-      if (!data.paciente || !data.fecha || !data.hora) return alert('Por favor, llena los campos básicos');
-      btn.disabled = true; btn.innerHTML = "Guardando...";
-      try {
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addAppointment', data }) }).then(r => r.json());
-        if (res.success) { hideModal(); loadData(); }
-      } catch (e) { alert('Error al guardar'); }
-      btn.disabled = false; btn.innerHTML = "GUARDAR";
+      const data = { paciente: document.getElementById('input-paciente').value, fecha: document.getElementById('input-fecha').value, hora: document.getElementById('input-hora').value };
+      if (!data.paciente || !data.fecha) return alert('Datos incompletos');
+      await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addAppointment', data }) });
+      hideModal(); loadData();
     }
 
     async function eliminarCita(id) {
-      if (!confirm('¿Seguro que deseas eliminar esta cita?')) return;
-      try {
-        await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteAppointment', data: { id } }) });
-        loadData();
-      } catch (e) { alert('Error al eliminar'); }
+      if (!confirm('¿Eliminar?')) return;
+      await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteAppointment', data: { id } }) });
+      loadData();
     }
 
     function switchView(v) { currentView = v; document.querySelectorAll('.view').forEach(e => e.classList.add('hidden')); document.getElementById('view-'+v).classList.remove('hidden'); renderCurrentView(); }
-    function showAddModal() { document.getElementById('modal-add').classList.remove('hidden'); document.getElementById('input-fecha').value = getTodayStr(); }
+    function showAddModal() { document.getElementById('modal-add').classList.remove('hidden'); document.getElementById('input-fecha').value = new Date().toLocaleDateString('en-CA'); }
     function hideModal() { document.getElementById('modal-add').classList.add('hidden'); }
     function debounceSearch(q) { 
       clearTimeout(window.t); 
@@ -194,4 +177,14 @@
       if(res.success && res.patients.length > 0) {
         sug.classList.remove('hidden');
         res.patients.forEach(p => {
-          const d = document.
+          const d = document.createElement('div'); d.className = 'p-3 hover:bg-gray-50 cursor-pointer border-b text-sm font-medium'; d.innerHTML = p.name;
+          d.onclick = () => { document.getElementById('input-paciente').value = p.name; sug.classList.add('hidden'); };
+          sug.appendChild(d);
+        });
+      }
+    };
+
+    window.onload = loadData;
+  </script>
+</body>
+</html>
