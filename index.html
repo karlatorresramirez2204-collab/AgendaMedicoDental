@@ -28,33 +28,36 @@
     <div id="view-hoy" class="view">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold">Hoy</h2>
-        <button onclick="showAddModal()" class="bg-[#1D3B8C] text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-lg active:scale-95">+ Nueva cita</button>
+        <button onclick="showAddModal()" class="bg-[#1D3B8C] text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-lg">+ Nueva cita</button>
       </div>
       <div id="list-hoy" class="space-y-4"></div>
     </div>
 
     <div id="view-semana" class="view hidden"><h2 class="text-2xl font-bold mb-6">Esta Semana</h2><div id="list-semana" class="space-y-4"></div></div>
     <div id="view-mes" class="view hidden"><h2 class="text-2xl font-bold mb-6">Todo el Mes</h2><div id="list-mes" class="space-y-4"></div></div>
-    
     <div id="view-pacientes" class="view hidden">
       <h2 class="text-2xl font-bold mb-4">Pacientes</h2>
-      <input id="search-pacientes" type="text" placeholder="Buscar nombre..." oninput="debounceSearch(this.value)" class="w-full border border-[#C5A473]/40 rounded-2xl px-5 py-3 mb-6 focus:outline-none">
+      <input id="search-pacientes" type="text" placeholder="Buscar nombre..." oninput="debounceSearch(this.value)" class="w-full border border-[#C5A473]/40 rounded-2xl px-5 py-3 mb-6 focus:outline-none focus:border-[#1D3B8C]">
       <div id="list-pacientes" class="space-y-4"></div>
     </div>
   </div>
 
   <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#C5A473]/20 max-w-xl mx-auto z-50 py-3 flex justify-around shadow-2xl font-bold text-[9px]">
-    <button onclick="switchView('hoy')" class="flex flex-col items-center"><span>📅</span>HOY</button>
-    <button onclick="switchView('semana')" class="flex flex-col items-center"><span>📆</span>SEMANA</button>
-    <button onclick="switchView('mes')" class="flex flex-col items-center"><span>📋</span>MES</button>
-    <button onclick="switchView('pacientes')" class="flex flex-col items-center"><span>👤</span>PACIENTES</button>
+    <button onclick="switchView('hoy')">📅 HOY</button>
+    <button onclick="switchView('semana')">📆 SEMANA</button>
+    <button onclick="switchView('mes')">📋 MES</button>
+    <button onclick="switchView('pacientes')">👤 PACIENTES</button>
   </div>
 
   <div id="modal-add" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-end">
     <div class="bg-white w-full max-w-xl mx-auto rounded-t-3xl p-6 shadow-2xl" onclick="event.stopPropagation()">
       <h3 class="text-xl font-bold mb-6">Nueva Cita</h3>
       <div class="space-y-4">
-        <input id="input-paciente" type="text" placeholder="Nombre completo" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
+        <div class="relative">
+          <input id="input-paciente" type="text" placeholder="Nombre del paciente" oninput="debounceSearchSuggestions(this.value)" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
+          <div id="suggestions" class="hidden absolute w-full bg-white border border-[#C5A473]/30 mt-1 rounded-xl shadow-xl max-h-40 overflow-auto z-[110]"></div>
+        </div>
+        <input id="input-telefono" type="tel" placeholder="Teléfono" class="w-full border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
         <div class="grid grid-cols-2 gap-4">
           <input id="input-fecha" type="date" class="border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
           <input id="input-hora" type="time" class="border border-[#C5A473]/30 rounded-xl px-4 py-3 focus:outline-none">
@@ -69,14 +72,13 @@
 
   <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzkb5YpZB845gYW6gQLmR-kKYuMHd1jrOJoeTI6mfb7nRk0MUeyGs-QkZkjBeM5hZWH/exec';
+
     let appointments = [];
     let currentView = 'hoy';
 
-    // FUNCIÓN DE LIMPIEZA DE FECHAS (La clave de todo)
-    function clean(f) {
-      if(!f) return "";
-      return String(f).split('T')[0].trim();
-    }
+    function clean(f) { return f ? String(f).split('T')[0].trim() : ""; }
+
+    function getTodayStr() { return new Date().toLocaleDateString('en-CA'); }
 
     function loadData() {
       const s = document.createElement('script');
@@ -92,30 +94,22 @@
     }
 
     function renderCurrentView() {
-      // Obtenemos hoy en formato YYYY-MM-DD
-      const hoy = new Date();
-      const hoyStr = hoy.toLocaleDateString('en-CA'); 
+      const hoyStr = getTodayStr();
       let list = [];
-
-      if (currentView === 'hoy') {
-        list = appointments.filter(a => clean(a.fecha) === hoyStr);
-      } else if (currentView === 'semana') {
-        const limite = new Date();
-        limite.setDate(hoy.getDate() + 7);
-        const limiteStr = limite.toLocaleDateString('en-CA');
-        list = appointments.filter(a => clean(a.fecha) >= hoyStr && clean(a.fecha) <= limiteStr);
-      } else if (currentView === 'mes') {
-        list = appointments;
-      } else if (currentView === 'pacientes') {
-        renderPacientes(); return;
+      if (currentView === 'hoy') list = appointments.filter(a => clean(a.fecha) === hoyStr);
+      else if (currentView === 'semana') {
+        const lim = new Date(); lim.setDate(lim.getDate() + 7);
+        list = appointments.filter(a => clean(a.fecha) >= hoyStr && clean(a.fecha) <= lim.toLocaleDateString('en-CA'));
       }
+      else if (currentView === 'mes') list = appointments;
+      else if (currentView === 'pacientes') { renderPacientes(); return; }
       drawList('list-' + currentView, list);
     }
 
     function drawList(id, data) {
       const c = document.getElementById(id);
       if (!c) return;
-      c.innerHTML = data.length === 0 ? '<div class="text-center py-20 text-gray-400 font-medium italic">No hay citas registradas</div>' : '';
+      c.innerHTML = data.length === 0 ? '<div class="text-center py-20 text-[#C5A473]/50 font-medium italic">No hay citas</div>' : '';
       data.sort((a,b) => String(a.hora).localeCompare(String(b.hora))).forEach(a => {
         const d = document.createElement('div');
         d.className = 'card flex items-center justify-between mb-4';
@@ -127,7 +121,7 @@
 
     function renderPacientes() {
       const c = document.getElementById('list-pacientes');
-      c.innerHTML = '<div class="text-center py-10 italic">Cargando pacientes...</div>';
+      c.innerHTML = '<div class="text-center py-10 italic">Cargando...</div>';
       const s = document.createElement('script');
       s.src = `${WEB_APP_URL}?action=getPatients&callback=handleP&v=${Date.now()}`;
       document.body.appendChild(s);
@@ -141,17 +135,49 @@
           const d = document.createElement('div');
           d.className = 'card flex justify-between items-center mb-4';
           d.innerHTML = `<div><div class="font-bold">${p.name}</div><div class="text-[9px] text-gray-400 uppercase font-bold">Última: ${clean(p.lastFecha)}</div></div>
-                         <button onclick="document.getElementById('input-paciente').value='${p.name}'; showAddModal();" class="text-[#1D3B8C] font-bold text-[10px] bg-[#1D3B8C]/5 px-4 py-2 rounded-xl">+ CITA</button>`;
+                         <button onclick="document.getElementById('input-paciente').value='${p.name}'; document.getElementById('input-telefono').value='${p.telefono}'; showAddModal();" class="text-[#1D3B8C] font-bold text-[10px] bg-[#1D3B8C]/5 px-4 py-2 rounded-xl">+ CITA</button>`;
           c.appendChild(d);
         });
       }
     };
 
+    function debounceSearch(q) {
+      if(q.length < 2) { renderPacientes(); return; }
+      const s = document.createElement('script');
+      s.src = `${WEB_APP_URL}?action=searchPatients&query=${q}&callback=handleP`;
+      document.body.appendChild(s);
+    }
+
+    function debounceSearchSuggestions(q) {
+      clearTimeout(window.t);
+      const sug = document.getElementById('suggestions');
+      if(q.length < 2) { sug.classList.add('hidden'); return; }
+      window.t = setTimeout(() => {
+        const s = document.createElement('script');
+        s.src = `${WEB_APP_URL}?action=searchPatients&query=${q}&callback=hS`;
+        document.body.appendChild(s);
+      }, 400);
+    }
+
+    window.hS = (res) => {
+      const sug = document.getElementById('suggestions'); sug.innerHTML = '';
+      if(res.success && res.patients.length > 0) {
+        sug.classList.remove('hidden');
+        res.patients.forEach(p => {
+          const d = document.createElement('div'); d.className = 'p-3 hover:bg-gray-50 cursor-pointer border-b text-sm font-medium'; d.innerHTML = p.name;
+          d.onclick = () => { document.getElementById('input-paciente').value = p.name; document.getElementById('input-telefono').value = p.telefono; sug.classList.add('hidden'); };
+          sug.appendChild(d);
+        });
+      }
+    };
+
     async function guardarCita() {
-      const data = { paciente: document.getElementById('input-paciente').value, fecha: document.getElementById('input-fecha').value, hora: document.getElementById('input-hora').value };
-      if (!data.paciente || !data.fecha) return alert('Datos incompletos');
+      const btn = document.getElementById('btn-save');
+      const data = { paciente: document.getElementById('input-paciente').value, telefono: document.getElementById('input-telefono').value, fecha: document.getElementById('input-fecha').value, hora: document.getElementById('input-hora').value };
+      if (!data.paciente || !data.fecha) return alert('Faltan datos');
+      btn.disabled = true; btn.innerHTML = "...";
       await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'addAppointment', data }) });
-      hideModal(); loadData();
+      hideModal(); loadData(); btn.disabled = false; btn.innerHTML = "GUARDAR";
     }
 
     async function eliminarCita(id) {
@@ -161,29 +187,9 @@
     }
 
     function switchView(v) { currentView = v; document.querySelectorAll('.view').forEach(e => e.classList.add('hidden')); document.getElementById('view-'+v).classList.remove('hidden'); renderCurrentView(); }
-    function showAddModal() { document.getElementById('modal-add').classList.remove('hidden'); document.getElementById('input-fecha').value = new Date().toLocaleDateString('en-CA'); }
+    function showAddModal() { document.getElementById('modal-add').classList.remove('hidden'); document.getElementById('input-fecha').value = getTodayStr(); }
     function hideModal() { document.getElementById('modal-add').classList.add('hidden'); }
-    function debounceSearch(q) { 
-      clearTimeout(window.t); 
-      if(q.length<2) { document.getElementById('suggestions').classList.add('hidden'); return; }
-      window.t = setTimeout(() => {
-        const s = document.createElement('script');
-        s.src = `${WEB_APP_URL}?action=searchPatients&query=${q}&callback=hS`;
-        document.body.appendChild(s);
-      }, 400);
-    }
-    window.hS = (res) => {
-      const sug = document.getElementById('suggestions'); sug.innerHTML = '';
-      if(res.success && res.patients.length > 0) {
-        sug.classList.remove('hidden');
-        res.patients.forEach(p => {
-          const d = document.createElement('div'); d.className = 'p-3 hover:bg-gray-50 cursor-pointer border-b text-sm font-medium'; d.innerHTML = p.name;
-          d.onclick = () => { document.getElementById('input-paciente').value = p.name; sug.classList.add('hidden'); };
-          sug.appendChild(d);
-        });
-      }
-    };
-
+    
     window.onload = loadData;
   </script>
 </body>
